@@ -1,5 +1,5 @@
+package gameFolder;
 import javax.swing.*;
-
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.util.Random;
