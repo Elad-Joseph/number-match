@@ -3,6 +3,7 @@ package gameFolder;
 import javax.swing.*;
 import java.awt.Color;
 import java.awt.event.MouseEvent;
+import java.beans.Visibility;
 import java.util.Map;
 import java.util.Random;
 import java.util.HashMap;
@@ -28,13 +29,10 @@ public class main {
     int xOffset = (int) (double) (windowWidth - buttonsize * xcount) / 2;
     Map<JButton, ButtonData> ButtonDataMap = new HashMap<JButton, ButtonData>();
     JButton[][] board = new JButton[9][xcount];
-    int addedScore;
-    int addRowClicksLeft= 5;
-    int[] lastButtonPos = new int[2];
-    int[] numOfVisiblenumbersInRow = new int[9];
+    int NumbersOfButtonMaching = rd.nextInt(1, 8);
 
     public void game() {
-        for(int i = 0;i<9;i++){numOfVisiblenumbersInRow[i] = -1;}
+
         wn = new JFrame();
         wn.setSize(windowWidth, windowHeight);
         wn.setLayout(null);
@@ -59,10 +57,8 @@ public class main {
         button.setBounds(buttonsize * x + xOffset, buttonsize * y + Yoffset, buttonsize, buttonsize);
         clickbutton(button);
         board[y][x] = button;
-        numOfVisiblenumbersInRow[y] ++;
         ButtonData buttonData = new ButtonData(button, x, y, value);
         ButtonDataMap.put(button, buttonData);
-        lastButtonPos[0] = y; lastButtonPos[1] = x;
         buttonsleft++;
     }
 
@@ -87,10 +83,9 @@ public class main {
                 if (board[y][x] == null) {
                     break;
                 }
-                
-                if((((highest.X<ButtonDataMap.get(board[y][x]).X)&&(highest.Y<ButtonDataMap.get(board[y][x]).Y))||(highest.Y<ButtonDataMap.get(board[y][x]).Y)||
-                ((highest.X<ButtonDataMap.get(board[y][x]).X)&&(highest.Y==ButtonDataMap.get(board[y][x]).Y)))&&
-                (ButtonDataMap.get(board[y][x]).Visablilty)){
+                if ((highest.X * highest.Y + highest.X < ButtonDataMap.get(board[y][x]).X
+                        * ButtonDataMap.get(board[y][x]).Y + ButtonDataMap.get(board[y][x]).X) &&
+                        (ButtonDataMap.get(board[y][x]).Visablilty)) {
                     highest = ButtonDataMap.get(board[y][x]);
                 }
             }
@@ -106,16 +101,13 @@ public class main {
             }
             createbutton(x, y);
         }
-        addRowClicksLeft--;
     }
-
 
     public void AddNumbersClicked(JButton addnumbers) {
         addnumbers.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if(buttonsleft*2<82 && addRowClicksLeft!=0)
-                    AddRow();
+                AddRow();
             }
         });
     }
@@ -135,13 +127,13 @@ public class main {
                         } else if (findmatch() && checkpos()) {
                             usedbuttons[1].setVisible(false);
                             usedbuttons[2].setVisible(false);
-                            score += addedScore;
+                            score += addedScore();
+                            ;
                             scorepanel.setText(Integer.toString(score));
                             clickcounter = 2;
                             buttonsleft -= 2;
                             ButtonDataMap.get(usedbuttons[1]).Visablilty = false;
                             ButtonDataMap.get(usedbuttons[2]).Visablilty = false;
-                            checkForRemove();
                         } else {
                             usedbuttons[1].setBackground(null);
                             usedbuttons[2].setBackground(null);
@@ -151,6 +143,20 @@ public class main {
             }
         });
     }
+
+    public int addedScore() {
+        if ((Math.abs(usedbuttons[1].getX() - usedbuttons[2].getX()) > 100
+                && usedbuttons[1].getY() == usedbuttons[2].getY()) ||
+                (Math.abs(usedbuttons[1].getY() - usedbuttons[2].getY()) > 100
+                        && usedbuttons[1].getX() == usedbuttons[2].getX())
+                ||
+                (Math.abs(usedbuttons[1].getX() - usedbuttons[2].getX()) > 100
+                        && Math.abs(usedbuttons[1].getY() - usedbuttons[2].getY()) > 100)) {
+            return 4;
+        }
+        return 2;
+    }
+
     public boolean findmatch() {
         int num1 = Integer.parseInt(usedbuttons[1].getText());
         int num2 = Integer.parseInt(usedbuttons[2].getText());
@@ -159,9 +165,29 @@ public class main {
 
         return false;
     }
-    
+    // public boolean checkpos(){
+    // JButton higher = (usedbuttons[1].getY()<usedbuttons[2].getY()) ?
+    // usedbuttons[1] : usedbuttons[2];
+    // JButton lower = (usedbuttons[1].getY()>usedbuttons[2].getY()) ?
+    // usedbuttons[1] : usedbuttons[2];
+    // if((Math.abs(usedbuttons[1].getX()-usedbuttons[2].getX())<buttonsize + 1)&&
+    // (Math.abs(usedbuttons[1].getY()-usedbuttons[2].getY())<buttonsize + 1)||
+    // (Math.abs(usedbuttons[1].getY()-usedbuttons[2].getY())==Math.abs(usedbuttons[1].getX()-usedbuttons[2].getX())))
+    // return true;
+    // else if((Math.abs(usedbuttons[1].getX()-usedbuttons[2].getX())==700)&&
+    // (Math.abs(usedbuttons[1].getY()-usedbuttons[2].getY())==50))
+    // return true;
+    // else if((higher.getX() == buttonsize*(xcount-1)+xOffset && lower.getX() ==
+    // Yoffset)&&
+    // (Math.abs(usedbuttons[1].getY()-usedbuttons[2].getY())<xOffset &&
+    // Math.abs(usedbuttons[1].getY()-usedbuttons[2].getY())>0))
+    // return true;
+    // return false;
+    // }
 
     public boolean checkpos() {
+        ButtonData button1 = ButtonDataMap.get(usedbuttons[1]);
+        ButtonData button2 = ButtonDataMap.get(usedbuttons[2]);
         if (ButtonDataMap.get(usedbuttons[1]).Y == ButtonDataMap.get(usedbuttons[2]).Y) {
             return same_X_Axis();
         }
@@ -180,35 +206,22 @@ public class main {
     public boolean same_X_Axis(){
         ButtonData button1 = (ButtonDataMap.get(usedbuttons[1]).X<ButtonDataMap.get(usedbuttons[2]).X) ? ButtonDataMap.get(usedbuttons[1]) : ButtonDataMap.get(usedbuttons[2]);
         ButtonData button2 = (ButtonDataMap.get(usedbuttons[1]).X>ButtonDataMap.get(usedbuttons[2]).X) ? ButtonDataMap.get(usedbuttons[1]) : ButtonDataMap.get(usedbuttons[2]);
-        int space_counter = 0;
         for(int i = button1.X +1;i<button2.X;i++){
             if(ButtonDataMap.get(board[button1.Y][i]).Visablilty){
                 return false;
             }
-            space_counter++;
         }
-        if(space_counter!=0)
-            addedScore = 4;
-        else
-            addedScore = 1;
-
         return true;
     }
 
     public boolean same_Y_Axis(){
         ButtonData button1 = (ButtonDataMap.get(usedbuttons[1]).Y<ButtonDataMap.get(usedbuttons[2]).Y) ? ButtonDataMap.get(usedbuttons[1]) : ButtonDataMap.get(usedbuttons[2]);
         ButtonData button2 = (ButtonDataMap.get(usedbuttons[1]).Y>ButtonDataMap.get(usedbuttons[2]).Y) ? ButtonDataMap.get(usedbuttons[1]) : ButtonDataMap.get(usedbuttons[2]);
-        int space_counter = 0;
         for(int i = button1.Y +1;i<button2.Y;i++){
             if(ButtonDataMap.get(board[i][button1.X]).Visablilty){
                 return false;
             }
-            space_counter++;
         }
-        if(space_counter!=0)
-            addedScore = 4;
-        else
-            addedScore = 1;
         return true;
     
     }
@@ -218,77 +231,37 @@ public class main {
         ButtonData button2 = (ButtonDataMap.get(usedbuttons[1]).Y > ButtonDataMap.get(usedbuttons[2]).Y) ? ButtonDataMap.get(usedbuttons[1]) : ButtonDataMap.get(usedbuttons[2]);
         int i = (button1.X < button2.X) ? 1 : -1; 
         int x = button1.X+i;
-        int space_counter = 0;
         for(int y = Math.abs(button1.Y - button2.Y)-1; y < button2.Y; y++){
             if(ButtonDataMap.get(board[y][x]).X == button2.X){return true;}
             if(ButtonDataMap.get(board[y][x]).Visablilty){
                 return false;
             }
             x += i;
-            space_counter++;
         }
-        if(space_counter!=0)
-            addedScore = 4;
-        else
-            addedScore = 1;
         return true;
     }
 
     public boolean line_by_line(){
         ButtonData button1 = (ButtonDataMap.get(usedbuttons[1]).Y < ButtonDataMap.get(usedbuttons[2]).Y) ? ButtonDataMap.get(usedbuttons[1]) : ButtonDataMap.get(usedbuttons[2]);
         ButtonData button2 = (ButtonDataMap.get(usedbuttons[1]).Y > ButtonDataMap.get(usedbuttons[2]).Y) ? ButtonDataMap.get(usedbuttons[1]) : ButtonDataMap.get(usedbuttons[2]);
-        int x = (button1.X<8)? button1.X+1:0;int y = (button1.X != 0) ? button1.Y:+1;
-        int space_counter = 0;
+        int x = button1.X+1;int y = button1.Y;
         for(int i = 0;i < (xcount-1 - button1.X)+button2.X;i++){
             if(ButtonDataMap.get(board[y][x]).Visablilty){
                 return false;
             }
-            space_counter++;
             x++;
             if(x == xcount){
                 y++;x=0;
             }
         }
-        if(space_counter!=0)
-            addedScore = 4;
-        else
-            addedScore = 2;
-        return true;    
+        return true;
     }
-    public void checkForRemove(){
-        boolean flag = false;
-        int removedRowNum = -1;
-        for(int i = 0;i<9;i++){
-            if(numOfVisiblenumbersInRow[i] == 0){
-                flag = true;
-                removedRowNum = i;
-                break;
-            }
+
+    public int ConstractTheBoard() {
+        for (int i = 0; i < NumbersOfButtonMaching; i++) {
+
         }
-        if(flag){
-            bringRowUpBase(removedRowNum+1);
-        }
+        return 1;
     }
-    //serves as a launcher and a base to the active method
-    public void bringRowUpBase(int row){
-        if(numOfVisiblenumbersInRow[row+1] != -1 || row+1 < 10){
-            for(int x = 0;x<xcount;x++){
-                try{
-                    bringRowUpActive(row, x);
-                }
-                catch(Exception e){
-                    break;
-                }
-            }
-            if(lastButtonPos[0] == row){lastButtonPos[0] = row-1;}
-        }
-    }
-    // changes the button bounds on the screen,board list and buttonDataMap in orther to bring the row up
-    public void bringRowUpActive(int row, int x){
-        board[row][x].setBounds(buttonsize * x + xOffset, buttonsize * row-1 + Yoffset, buttonsize, buttonsize);
-        ButtonDataMap.get(board[row][x]).Y -= 1;
-        board[row-1][x] = board[row][x];
-        board[row][x] = null;
-    }
-    
+
 }
