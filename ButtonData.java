@@ -1,4 +1,4 @@
-package gameFolder;
+
 import javax.swing.*;
 
 public class ButtonData
